@@ -1,0 +1,130 @@
+---
+/**
+ * Toast.astro
+ * -----------
+ *
+ * Singleton mount for `@arraypress/toast`. Renders one host `<div>`
+ * (with `transition:persist` so it survives Astro view transitions)
+ * and an inline init script that creates a toast manager bound to
+ * that host and wires `window.toast()` to its `show()` method.
+ *
+ * The wired global is also a callable with shortcut methods:
+ *
+ *   window.toast('Saved');                                 // success
+ *   window.toast('Synced', { variant: 'info' });
+ *   window.toast.success('Added to wishlist');
+ *   window.toast.error('Save failed', { duration: 5000 });
+ *
+ * Set `exposeGlobal={false}` to skip the global helper — useful
+ * when you want to expose toast yourself or run multiple mounts.
+ *
+ * @example Bare bones
+ *   <Toast />
+ *
+ * @example With class hook + custom global name
+ *   <Toast class="toast-host--theme-dark" globalName="notify" />
+ */
+
+import type { ToastProps } from './types';
+
+const {
+	hostId       = 'ap-toast-host',
+	classPrefix  = 'toast',
+	exposeGlobal = true,
+	globalName   = 'toast',
+	persist      = true,
+	class: className,
+	icons,
+} = Astro.props as ToastProps;
+---
+
+<div
+	id={hostId}
+	class:list={[`${classPrefix}-host`, className]}
+	aria-live="polite"
+	aria-atomic="false"
+	transition:persist={persist ? 'ap-toast-host' : undefined}
+></div>
+
+<script
+	is:inline
+	define:vars={{
+		TOAST_HOST_ID: hostId,
+		TOAST_CLASS_PREFIX: classPrefix,
+		TOAST_EXPOSE_GLOBAL: exposeGlobal,
+		TOAST_GLOBAL_NAME: globalName,
+		TOAST_ICONS: icons ?? null,
+	}}
+>
+	(function () {
+		if (window.__apToastAstroInitBound) return;
+		window.__apToastAstroInitBound = true;
+
+		/* Minimal inline runtime — mirrors createToastManager() in
+		 * @arraypress/toast. Inlined so consumers don't need a bundler
+		 * to pull the package into client code. */
+		var ICONS_DEFAULT = {
+			success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>',
+			info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+			warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+			error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+		};
+		var CLOSE_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+		var ICONS = Object.assign({}, ICONS_DEFAULT, TOAST_ICONS || {});
+
+		function host() { return document.getElementById(TOAST_HOST_ID); }
+
+		function show(message, opts) {
+			opts = opts || {};
+			var variant = opts.variant || 'success';
+			var duration = opts.duration != null ? opts.duration : 3000;
+			var h = host();
+			if (!h) return null;
+
+			var el = document.createElement('div');
+			el.className = TOAST_CLASS_PREFIX + ' ' + TOAST_CLASS_PREFIX + '--' + variant;
+			el.setAttribute('role', variant === 'error' || variant === 'warning' ? 'alert' : 'status');
+
+			var iconSpan = document.createElement('span');
+			iconSpan.className = TOAST_CLASS_PREFIX + '-icon';
+			iconSpan.innerHTML = ICONS[variant] || ICONS.success;
+
+			var msgSpan = document.createElement('span');
+			msgSpan.className = TOAST_CLASS_PREFIX + '-message';
+			msgSpan.textContent = String(message);
+
+			var btn = document.createElement('button');
+			btn.type = 'button';
+			btn.className = TOAST_CLASS_PREFIX + '-close';
+			btn.setAttribute('aria-label', 'Dismiss');
+			btn.innerHTML = CLOSE_ICON;
+
+			el.appendChild(iconSpan);
+			el.appendChild(msgSpan);
+			el.appendChild(btn);
+			h.appendChild(el);
+
+			requestAnimationFrame(function () { el.classList.add('is-visible'); });
+
+			function dismiss() {
+				el.classList.remove('is-visible');
+				setTimeout(function () { el.remove(); }, 250);
+			}
+			btn.addEventListener('click', dismiss);
+			if (duration > 0) setTimeout(dismiss, duration);
+			return el;
+		}
+
+		var api = function (message, opts) { return show(message, opts); };
+		api.show    = show;
+		api.success = function (m, o) { return show(m, Object.assign({}, o || {}, { variant: 'success' })); };
+		api.info    = function (m, o) { return show(m, Object.assign({}, o || {}, { variant: 'info' })); };
+		api.warning = function (m, o) { return show(m, Object.assign({}, o || {}, { variant: 'warning' })); };
+		api.error   = function (m, o) { return show(m, Object.assign({}, o || {}, { variant: 'error' })); };
+		api.clear   = function () { var h = host(); if (h) h.innerHTML = ''; };
+
+		if (TOAST_EXPOSE_GLOBAL) {
+			window[TOAST_GLOBAL_NAME] = api;
+		}
+	})();
+</script>
