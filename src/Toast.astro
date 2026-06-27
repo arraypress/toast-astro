@@ -36,15 +36,38 @@ const {
 	class: className,
 	icons,
 } = Astro.props as ToastProps;
+
+const hostClass = [`${classPrefix}-host`, className];
 ---
 
-<div
-	id={hostId}
-	class:list={[`${classPrefix}-host`, className]}
-	aria-live="polite"
-	aria-atomic="false"
-	transition:persist={persist ? 'ap-toast-host' : undefined}
-></div>
+{/*
+  Render the host in one of two static branches rather than a single
+  conditional `transition:persist={persist ? 'ap-toast-host' : undefined}`.
+  Astro's compiler does NOT evaluate an expression passed to the
+  `transition:persist` directive — under the experimental container it emits
+  the expression's *source text* as a literal attribute value (e.g.
+  `data-astro-transition-persist="(persistName)"`), which is broken whether
+  persist is on or off. A static string literal (`transition:persist="…"`) is
+  emitted correctly, and omitting the directive omits the attribute. So we
+  branch in the markup: persist on → host with the literal persist name;
+  persist off → identical host without the directive.
+*/}
+{persist ? (
+	<div
+		id={hostId}
+		class:list={hostClass}
+		aria-live="polite"
+		aria-atomic="false"
+		transition:persist="ap-toast-host"
+	></div>
+) : (
+	<div
+		id={hostId}
+		class:list={hostClass}
+		aria-live="polite"
+		aria-atomic="false"
+	></div>
+)}
 
 <script
 	is:inline

@@ -67,9 +67,9 @@ describe('<Toast> — host', () => {
 // ─── Persist toggle ──────────────────────────────────────────────
 
 describe('<Toast> — persist prop', () => {
-	it('adds the transition:persist attribute by default', async () => {
+	it('adds the persist attribute under the fixed name by default', async () => {
 		const html = await render();
-		expect(html).toMatch(/data-astro-transition-persist|transition:persist/);
+		expect(html).toMatch(/data-astro-transition-persist="ap-toast-host"/);
 	});
 
 	it('omits the persist attribute when persist=false', async () => {
