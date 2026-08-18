@@ -15,7 +15,7 @@
  * surface of the runtime API.
  */
 
-import type { ToastOptions } from '@arraypress/toast';
+import type { ToastOptions } from './manager';
 
 type ToastFn = ((message: string, opts?: ToastOptions) => HTMLElement | null) & {
 	show:    (message: string, opts?: ToastOptions) => HTMLElement | null;

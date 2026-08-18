@@ -8,7 +8,7 @@
  *
  * ```astro
  * ---
- * import '@arraypress/toast/style.css';
+ * import '@arraypress/toast-astro/style.css';
  * import { Toast } from '@arraypress/toast-astro';
  * ---
  * <html>
@@ -32,3 +32,12 @@ import Toast from './Toast.astro';
 export default Toast;
 export { Toast };
 export type * from './types';
+
+/*
+ * The DOM-only toast manager, absorbed from @arraypress/toast in 2.0.0.
+ * `<Toast />` inlines its own copy of this logic — it has to, since the
+ * init script runs unbundled — so this export is for the cases the
+ * component doesn't cover: driving toasts from a module script, or
+ * mounting a second host with its own options.
+ */
+export { createToastManager } from './manager';

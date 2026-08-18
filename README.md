@@ -1,13 +1,13 @@
 # @arraypress/toast-astro
 
-> Astro wrapper for [`@arraypress/toast`](https://github.com/arraypress/toast).
+> Toast notifications for Astro — stacked, auto-dismissing, accessible. Zero dependencies.
 > One `<Toast />` mount + a `window.toast()` global, view-transition
 > safe.
 
 ## Install
 
 ```bash
-npm install @arraypress/toast @arraypress/toast-astro
+npm install @arraypress/toast-astro
 ```
 
 The vanilla package is a peer dependency for its types + canonical
@@ -19,7 +19,7 @@ you don't need a bundler to pull it into client code.
 ```astro
 ---
 // src/layouts/Layout.astro
-import '@arraypress/toast/style.css';
+import '@arraypress/toast-astro/style.css';
 import { Toast } from '@arraypress/toast-astro';
 ---
 <html>

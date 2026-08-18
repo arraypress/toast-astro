@@ -1,10 +1,11 @@
 {
   "name": "@arraypress/toast-astro",
-  "version": "1.0.1",
-  "description": "Astro component for @arraypress/toast — singleton mount + window.toast() global, view-transition-safe.",
+  "version": "2.0.0",
+  "description": "Astro toast notifications \u2014 singleton mount + window.toast() global, view-transition-safe. Stacked, auto-dismissing, accessible (aria-live), 4 variants. Zero dependencies.",
   "type": "module",
   "files": [
     "src/",
+    "dist/",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -19,7 +20,12 @@
       "types": "./src/types.ts",
       "default": "./src/types.ts"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./style.css": "./dist/toast.css",
+    "./manager": {
+      "types": "./src/manager.d.ts",
+      "default": "./src/manager.js"
+    }
   },
   "keywords": [
     "astro",
@@ -46,7 +52,6 @@
     "registry": "https://registry.npmjs.org/"
   },
   "peerDependencies": {
-    "@arraypress/toast": "^1.0.0",
     "astro": "^6.0.0 || ^7.0.0"
   },
   "scripts": {

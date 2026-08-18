@@ -4,9 +4,9 @@
  * Public types for `<Toast>`.
  */
 
-import type { ToastManagerOptions, ToastManager, ToastVariant, ToastOptions } from '@arraypress/toast';
+import type { ToastManagerOptions, ToastManager, ToastVariant, ToastOptions } from './manager';
 
-export type { ToastManager, ToastVariant, ToastOptions } from '@arraypress/toast';
+export type { ToastManager, ToastVariant, ToastOptions } from './manager';
 
 /**
  * Props accepted by the `<Toast>` Astro component.
@@ -20,7 +20,7 @@ export interface ToastProps {
 	/**
 	 * Class-name prefix for the rendered markup. Defaults to `'toast'`.
 	 * Pair with a matching stylesheet — the canonical one ships at
-	 * `@arraypress/toast/style.css` keyed on `.toast`.
+	 * `@arraypress/toast-astro/style.css` keyed on `.toast`.
 	 */
 	classPrefix?: string;
 	/**
